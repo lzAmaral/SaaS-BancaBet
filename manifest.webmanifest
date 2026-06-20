@@ -1,0 +1,15 @@
+{
+  "name": "Controle de Banca Esportiva",
+  "short_name": "Banca Bet",
+  "description": "App mobile para controle de banca de apostas esportivas.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#050705",
+  "theme_color": "#050705",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "assets/logo-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/logo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#050705" />
+  <title>Controle de Banca Esportiva</title>
+  <meta name="description" content="Controle mobile de banca para apostas esportivas com saldo, histórico, gráficos e estatísticas." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Banca Bet" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo-banca-neon.svg" />
+  <link rel="apple-touch-icon" href="assets/logo-apple-touch.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ====================== TELA DE LOGIN ====================== -->
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <img src="assets/logo-banca-neon.svg" alt="Banca Bet" />
+      </div>
+      <h1 class="auth-title">Banca Bet</h1>
+      <p class="auth-subtitle">Controle sua banca de qualquer dispositivo</p>
+
+      <!-- Abas Login / Cadastro -->
+      <div class="auth-tabs">
+        <button id="tabLogin" class="auth-tab active" type="button" onclick="switchTab('login')">Entrar</button>
+        <button id="tabSignup" class="auth-tab" type="button" onclick="switchTab('signup')">Cadastrar</button>
+      </div>
+
+      <!-- Formulário Login -->
+      <form id="loginForm" class="auth-form" autocomplete="off">
+        <label class="auth-field">
+          <span>E-mail</span>
+          <input id="loginEmail" type="email" placeholder="seu@email.com" required />
+        </label>
+        <label class="auth-field">
+          <span>Senha</span>
+          <input id="loginPassword" type="password" placeholder="••••••••" required minlength="6" />
+        </label>
+        <button class="primary-btn auth-btn" type="submit" id="loginBtn">Entrar</button>
+      </form>
+
+      <!-- Formulário Cadastro -->
+      <form id="signupForm" class="auth-form hidden" autocomplete="off">
+        <label class="auth-field">
+          <span>E-mail</span>
+          <input id="signupEmail" type="email" placeholder="seu@email.com" required />
+        </label>
+        <label class="auth-field">
+          <span>Senha</span>
+          <input id="signupPassword" type="password" placeholder="Mínimo 6 caracteres" required minlength="6" />
+        </label>
+        <label class="auth-field">
+          <span>Confirmar senha</span>
+          <input id="signupConfirm" type="password" placeholder="Repita a senha" required minlength="6" />
+        </label>
+        <button class="primary-btn auth-btn" type="submit" id="signupBtn">Criar conta</button>
+      </form>
+
+      <div class="auth-divider"><span>ou</span></div>
+
+      <!-- Login com Google -->
+      <button id="googleBtn" class="google-btn">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continuar com Google
+      </button>
+
+      <p id="authMessage" class="auth-message"></p>
+    </div>
+  </div>
+
+  <!-- ====================== APP PRINCIPAL ====================== -->
+  <main class="phone-shell" id="appMain" style="display:none">
+
+    <section class="balance-card sticky-top">
+      <div class="balance-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18a2 2 0 0 1 2 2v1.2h-3.25a3.25 3.25 0 0 0 0 6.5H20V17a2 2 0 0 1-2 2H6.5A2.5 2.5 0 0 1 4 16.5v-9Z"/><path d="M16.75 10.2H21v2.5h-4.25a1.25 1.25 0 0 1 0-2.5Z"/></svg>
+      </div>
+      <div class="balance-text">
+        <span>Saldo Atual:</span>
+        <strong id="currentBalance">R$ 0,00</strong>
+      </div>
+      <div class="balance-right" aria-hidden="true">
+        <div class="sync-status" id="syncStatus" title="Status de sincronização">
+          <span class="sync-dot"></span>
+        </div>
+        <div class="user-badge" id="userBadge">
+          <button id="userMenuBtn" class="user-menu-btn" aria-label="Menu do usuário">
+            <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          </button>
+        </div>
+        <div class="app-logo-corner"><img src="assets/logo-banca-neon.svg" alt="" /></div>
+        <div class="mini-spark">
+          <svg viewBox="0 0 120 70">
+            <polyline points="4,58 24,34 43,46 62,25 82,27 101,8 114,15" />
+            <path d="M101 8h13v13" />
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Menu do usuário -->
+    <div id="userMenu" class="user-menu hidden">
+      <div class="user-menu-email" id="userMenuEmail"></div>
+      <button id="signOutBtn" class="user-menu-item danger">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
+        Sair da conta
+      </button>
+    </div>
+
+    <nav class="top-tabs" aria-label="Abas principais">
+      <button class="top-tab active" data-view="betsView"><span class="ico">⌖</span>Apostas</button>
+      <button class="top-tab" data-view="resultsView"><span class="ico">▥</span>Resultados</button>
+      <button class="top-tab" data-view="settingsView"><span class="ico">⚙</span>Configurações</button>
+    </nav>
+
+    <section id="betsView" class="view active-view">
+      <article class="card neon-card">
+        <div class="section-title"><span>▣</span><h1>Nova aposta</h1></div>
+        <form id="betForm" autocomplete="off">
+          <label class="field full">
+            <span>Data da aposta</span>
+            <div class="input-with-icon"><i>▣</i><input id="betDate" type="date" required /></div>
+          </label>
+
+          <label class="field full">
+            <span>Descrição da aposta</span>
+            <div class="input-with-icon"><i>⚽</i><input id="betDescription" maxlength="100" placeholder="Ex.: Flamengo vence o jogo" required /><small id="countText">0/100</small></div>
+          </label>
+
+          <div class="grid-2">
+            <label class="field">
+              <span>Odd</span>
+              <div class="input-with-icon"><i>↗</i><input id="betOdd" type="number" min="1.01" step="0.01" placeholder="2.50" required /></div>
+            </label>
+            <label class="field">
+              <span>Valor apostado (R$)</span>
+              <div class="input-with-icon"><i>$</i><input id="betStake" type="number" min="0.01" step="0.01" placeholder="50,00" required /></div>
+            </label>
+          </div>
+
+          <div class="return-box">
+            <span>Possível retorno (R$)</span>
+            <strong id="possibleReturn">R$ 0,00</strong>
+          </div>
+
+          <button class="primary-btn" type="submit">＋ Adicionar aposta</button>
+        </form>
+      </article>
+
+      <section class="list-head">
+        <h2><span>▦</span>Apostas de hoje</h2>
+        <select id="statusFilter" aria-label="Filtrar apostas">
+          <option value="all">Todas</option>
+          <option value="pending">Pendentes</option>
+          <option value="green">Greens</option>
+          <option value="red">Reds</option>
+          <option value="refund">Reembolsos</option>
+        </select>
+      </section>
+      <div id="betsList" class="bets-list"></div>
+    </section>
+
+    <section id="resultsView" class="view">
+      <article class="card results-card">
+        <div class="section-title inline-title results-heading">
+          <div><span>▣</span><h1>Resumo por data</h1></div>
+          <time id="todayLabel"></time>
+        </div>
+        <label class="date-filter-card" for="summaryDate">
+          <span>Escolha a data do resumo</span>
+          <input id="summaryDate" type="date" />
+        </label>
+        <div class="metrics-grid">
+          <div class="metric large"><span>Lucro/Prejuízo do dia</span><strong id="dayProfit">R$ 0,00</strong><small>↗</small></div>
+          <div class="metric"><span>Apostas do dia</span><strong id="dayBets">0</strong></div>
+          <div class="metric"><span>Greens</span><strong id="greensCount">0</strong><small id="greensPercent">0%</small></div>
+          <div class="metric"><span>Reds</span><strong class="danger" id="redsCount">0</strong><small id="redsPercent">0%</small></div>
+          <div class="metric"><span>ROI</span><strong id="roiValue">0,00%</strong><small>↗</small></div>
+        </div>
+      </article>
+
+      <article class="card chart-card">
+        <div class="chart-title">
+          <h2>↗ Desempenho</h2>
+          <div class="segmented">
+            <button class="range-btn active" data-range="daily">Diário</button>
+            <button class="range-btn" data-range="monthly">Mensal</button>
+            <button class="range-btn" data-range="yearly">Anual</button>
+          </div>
+        </div>
+        <canvas id="performanceChart" height="240"></canvas>
+      </article>
+
+      <article class="card day-bets-card">
+        <div class="section-title inline-title">
+          <div><span>⚽</span><h1>Apostas da data</h1></div>
+          <small id="resultDayBetCount" class="muted"></small>
+        </div>
+        <div id="resultDayBetsList" class="bets-list result-day-list"></div>
+      </article>
+
+      <section class="rank-grid">
+        <article class="card rank-card profit-rank">
+          <h2>🏆 Maiores lucros</h2>
+          <div id="topWins"></div>
+          <button class="outline-btn">Ver todas ›</button>
+        </article>
+        <article class="card rank-card loss-rank">
+          <h2>↓ Maiores perdas</h2>
+          <div id="topLosses"></div>
+          <button class="outline-btn red">Ver todas ›</button>
+        </article>
+      </section>
+    </section>
+
+    <section id="settingsView" class="view">
+      <article class="card settings-card">
+        <div class="section-title"><span>⚙</span><h1>Configurações da banca</h1></div>
+        <div class="setting-row">
+          <div><i>▤</i><strong>Banca inicial</strong><small>Informe o valor inicial da sua banca.</small></div>
+          <input id="initialBankroll" type="number" min="0" step="0.01" />
+        </div>
+        <div class="setting-row">
+          <div><i>$</i><strong>Unidade padrão por aposta</strong><small>Valor fixo sugerido para cada aposta.</small></div>
+          <input id="unitStake" type="number" min="0" step="0.01" />
+        </div>
+        <div class="setting-row">
+          <div><i>◎</i><strong>Meta de lucro mensal</strong><small>Defina quanto deseja lucrar por mês.</small></div>
+          <input id="monthlyGoal" type="number" min="0" step="0.01" />
+        </div>
+        <div class="setting-row">
+          <div><i>!</i><strong>Limite de perda diária</strong><small>Alerta de segurança para não passar do limite.</small></div>
+          <input id="dailyLossLimit" type="number" min="0" step="0.01" />
+        </div>
+
+        <h2 class="subheading">Preferências</h2>
+        <label class="toggle-row"><span>🎨 <strong>Tema neon</strong><small>Ativa o destaque verde no tema escuro.</small></span><input type="checkbox" id="neonTheme" checked /><b></b></label>
+        <label class="toggle-row"><span>☁ <strong>Salvar automaticamente</strong><small>Salva apostas e resultados automaticamente.</small></span><input type="checkbox" id="autoSave" checked /><b></b></label>
+        <label class="toggle-row"><span>✓ <strong>Confirmar antes de marcar Green/Red</strong><small>Evita registrar resultado por engano.</small></span><input type="checkbox" id="confirmResult" checked /><b></b></label>
+
+        <h2 class="subheading">Ações</h2>
+        <button id="saveSettings" class="primary-btn">💾 Salvar configurações</button>
+        <button id="resetData" class="ghost-btn">↻ Restaurar dados</button>
+      </article>
+    </section>
+
+    <section id="historyView" class="view">
+      <article class="card">
+        <div class="section-title"><span>◷</span><h1>Histórico</h1></div>
+        <div id="historyList" class="history-list"></div>
+      </article>
+    </section>
+
+    <section id="statsView" class="view">
+      <article class="card">
+        <div class="section-title"><span>◔</span><h1>Estatísticas</h1></div>
+        <div class="stats-grid">
+          <div class="metric"><span>Total apostado</span><strong id="totalStake">R$ 0,00</strong></div>
+          <div class="metric"><span>Total retornado</span><strong id="totalReturn">R$ 0,00</strong></div>
+          <div class="metric"><span>Lucro total</span><strong id="totalProfit">R$ 0,00</strong></div>
+          <div class="metric"><span>Taxa de acerto</span><strong id="hitRate">0%</strong></div>
+        </div>
+      </article>
+    </section>
+
+    <section id="moreView" class="view">
+      <article class="card">
+        <div class="section-title"><span>⋯</span><h1>Mais</h1></div>
+        <p class="muted">Aqui você pode evoluir o app com exportação para Excel, filtros avançados, categorias de aposta e backup dos dados.</p>
+      </article>
+    </section>
+
+    <nav class="bottom-nav" aria-label="Menu inferior">
+      <button class="bottom-tab active" data-view="resultsView">↗<span>Dashboard</span></button>
+      <button class="bottom-tab" data-view="historyView">◷<span>Histórico</span></button>
+      <button class="bottom-tab" data-view="statsView">◔<span>Estatísticas</span></button>
+      <button class="bottom-tab" data-view="moreView">⋯<span>Mais</span></button>
+    </nav>
+  </main>
+
+  <!-- Diálogos -->
+  <dialog id="refundDialog">
+    <form method="dialog" class="dialog-card">
+      <h2>Valor reembolsado</h2>
+      <p>Informe quanto voltou nessa aposta.</p>
+      <input id="refundValue" type="number" min="0" step="0.01" placeholder="Ex.: 50,00" />
+      <div class="dialog-actions">
+        <button value="cancel" class="ghost-btn" type="submit">Cancelar</button>
+        <button id="confirmRefund" value="default" class="primary-btn" type="button">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirmDialog">
+    <form method="dialog" class="dialog-card">
+      <h2 id="confirmTitle">Confirmar ação</h2>
+      <p id="confirmMessage">Deseja salvar essa alteração?</p>
+      <div class="dialog-actions">
+        <button id="cancelConfirm" value="cancel" class="ghost-btn" type="button">Cancelar</button>
+        <button id="acceptConfirm" value="default" class="primary-btn" type="button">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="script.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(() => {}));
+    }
+  </script>
+
+</body>
+</html>
