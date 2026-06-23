@@ -1,4 +1,10 @@
 // ============================================================
+// FUNÇÕES GLOBAIS (UI) - Protegidas contra falhas de dependências
+// ============================================================
+// switchTab movido para o HTML diretamente para garantir funcionamento imediato.
+
+
+// ============================================================
 // CONFIGURAÇÃO SUPABASE
 // ⚠️  Substitua os valores abaixo com as credenciais do seu projeto
 // Encontre em: supabase.com → Seu projeto → Project Settings → API
@@ -6,29 +12,21 @@
 const SUPABASE_URL = 'https://payzflctlulbxrqzvpbz.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBheXpmbGN0bHVsYnhycXp2cGJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MjczMDYsImV4cCI6MjA5NzUwMzMwNn0.8x3mnqDkWIBmGysX7kC4PBK4KELTASq_4iDk74-9eJ0';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// Função global para troca de abas — chamada via onclick no HTML
-function switchTab(tab) {
-  const loginForm  = document.getElementById('loginForm');
-  const signupForm = document.getElementById('signupForm');
-  const tabLogin   = document.getElementById('tabLogin');
-  const tabSignup  = document.getElementById('tabSignup');
-  const authMsg    = document.getElementById('authMessage');
-  if (!loginForm || !signupForm) return;
-  if (tab === 'signup') {
-    signupForm.classList.remove('hidden');
-    loginForm.classList.add('hidden');
-    tabSignup.classList.add('active');
-    tabLogin.classList.remove('active');
-  } else {
-    loginForm.classList.remove('hidden');
-    signupForm.classList.add('hidden');
-    tabLogin.classList.add('active');
-    tabSignup.classList.remove('active');
-  }
-  if (authMsg) { authMsg.textContent = ''; authMsg.className = 'auth-message'; }
+let supabase = null;
+if (window.supabase) {
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} else {
+  console.error("ERRO CRÍTICO: Supabase não foi carregado. Verifique sua conexão, bloqueadores de anúncios ou faça um Hard Refresh (Cmd/Ctrl + Shift + R).");
+  // Aguarda o DOM carregar para mostrar o erro na tela
+  window.addEventListener('DOMContentLoaded', () => {
+    const authMsg = document.getElementById('authMessage');
+    if (authMsg) {
+      authMsg.textContent = 'Erro ao carregar o sistema (Cache antigo). Faça um Hard Refresh na página ou limpe os dados do site.';
+      authMsg.className = 'auth-message error';
+    }
+  });
 }
+
 
 // ============================================================
 // CONSTANTES E UTILITÁRIOS
@@ -298,6 +296,7 @@ function setAuthLoading(btn, loading) {
 
 async function handleLogin(event) {
   event.preventDefault();
+  if (!supabase) return showAuthMessage('Supabase não inicializado. Recarregue a página.', true);
   setAuthLoading(els.loginBtn, true);
   const { error } = await supabase.auth.signInWithPassword({
     email: els.loginEmail.value.trim(),
@@ -310,6 +309,7 @@ async function handleLogin(event) {
 
 async function handleSignup(event) {
   event.preventDefault();
+  if (!supabase) return showAuthMessage('Supabase não inicializado. Recarregue a página.', true);
   if (els.signupPassword.value !== els.signupConfirm.value) {
     showAuthMessage('As senhas não coincidem.', true); return;
   }
@@ -324,6 +324,7 @@ async function handleSignup(event) {
 }
 
 async function handleGoogleLogin() {
+  if (!supabase) return showAuthMessage('Supabase não inicializado. Recarregue a página.', true);
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: window.location.href }
@@ -332,7 +333,7 @@ async function handleGoogleLogin() {
 }
 
 async function handleSignOut() {
-  await supabase.auth.signOut();
+  if (supabase) await supabase.auth.signOut();
   state.user = null;
   state.bets = [];
   state.settings = { ...defaultSettings };
@@ -358,24 +359,26 @@ function translateAuthError(msg) {
 // ============================================================
 // INICIALIZAÇÃO — ouvir mudanças de sessão
 // ============================================================
-supabase.auth.onAuthStateChange(async (event, session) => {
-  if (session?.user) {
-    state.user = session.user;
-    els.userMenuEmail.textContent = session.user.email;
-    showApp();
-    await loadSettingsFromSupabase();
-    if (state.isOnline) {
-      await loadBetsFromSupabase();
+if (supabase) {
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (session?.user) {
+      state.user = session.user;
+      els.userMenuEmail.textContent = session.user.email;
+      showApp();
+      await loadSettingsFromSupabase();
+      if (state.isOnline) {
+        await loadBetsFromSupabase();
+      } else {
+        loadLocalFallback();
+        setSyncStatus('offline');
+      }
+      renderAll();
+      showView('betsView');
     } else {
-      loadLocalFallback();
-      setSyncStatus('offline');
+      showAuthScreen();
     }
-    renderAll();
-    showView('betsView');
-  } else {
-    showAuthScreen();
-  }
-});
+  });
+}
 
 // ============================================================
 // CÁLCULOS
@@ -797,21 +800,7 @@ function updateSettingsFromForm() {
 // ============================================================
 
 // Auth tabs
-els.tabLogin.addEventListener('click', () => {
-  els.loginForm.classList.remove('hidden');
-  els.signupForm.classList.add('hidden');
-  els.tabLogin.classList.add('active');
-  els.tabSignup.classList.remove('active');
-  showAuthMessage('');
-});
-els.tabSignup.addEventListener('click', () => {
-  els.signupForm.classList.remove('hidden');
-  els.loginForm.classList.add('hidden');
-  els.tabSignup.classList.add('active');
-  els.tabLogin.classList.remove('active');
-  showAuthMessage('');
-});
-
+// Eventos de tabs foram movidos para chamadas globais window.switchTab() no index.html
 els.loginForm.addEventListener('submit', handleLogin);
 els.signupForm.addEventListener('submit', handleSignup);
 els.googleBtn.addEventListener('click', handleGoogleLogin);

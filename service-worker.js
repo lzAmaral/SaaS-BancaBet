@@ -1,4 +1,4 @@
-const CACHE_NAME = 'banca-bet-v7-auth';
+const CACHE_NAME = 'banca-bet-v9-auth-fix';
 const FILES_TO_CACHE = [
   './',
   './index.html',

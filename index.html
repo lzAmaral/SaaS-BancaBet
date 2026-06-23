@@ -74,6 +74,30 @@
     </div>
   </div>
 
+  <script>
+    function switchTab(tab) {
+      var loginForm  = document.getElementById('loginForm');
+      var signupForm = document.getElementById('signupForm');
+      var tabLogin   = document.getElementById('tabLogin');
+      var tabSignup  = document.getElementById('tabSignup');
+      var authMsg    = document.getElementById('authMessage');
+      if (!loginForm || !signupForm) return;
+      
+      if (tab === 'signup') {
+        signupForm.style.display = 'grid';
+        loginForm.style.display = 'none';
+        tabSignup.classList.add('active');
+        tabLogin.classList.remove('active');
+      } else {
+        loginForm.style.display = 'grid';
+        signupForm.style.display = 'none';
+        tabLogin.classList.add('active');
+        tabSignup.classList.remove('active');
+      }
+      if (authMsg) { authMsg.textContent = ''; authMsg.className = 'auth-message'; }
+    }
+  </script>
+
   <!-- ====================== APP PRINCIPAL ====================== -->
   <main class="phone-shell" id="appMain" style="display:none">
 
@@ -312,8 +336,13 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="script.js"></script>
   <script>
+    // Forçando a remoção do Service Worker antigo para limpar o cache permanentemente no dev
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js').catch(() => {}));
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister();
+        }
+      });
     }
   </script>
 
