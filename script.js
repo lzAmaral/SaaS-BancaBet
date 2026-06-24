@@ -328,7 +328,7 @@ async function handleLogin(event) {
 
 
 async function handleSignup(event) {
-  event.preventDefault();
+  if (event) event.preventDefault();
   if (!supabase) return showAuthMessage('Supabase não inicializado. Recarregue a página.', true);
   if (els.signupPassword.value !== els.signupConfirm.value) {
     showAuthMessage('As senhas não coincidem.', true); return;
@@ -845,10 +845,9 @@ function updateSettingsFromForm() {
 // EVENT LISTENERS
 // ============================================================
 
-// Auth tabs
-// Eventos de tabs foram movidos para chamadas globais window.switchTab() no index.html
-els.loginForm.addEventListener('submit', handleLogin);
-els.signupForm.addEventListener('submit', handleSignup);
+// Auth — botões são type="button" com onclick, mas mantemos o listener como fallback
+els.loginForm.addEventListener('submit', (e) => { e.preventDefault(); handleLogin(null); });
+els.signupForm.addEventListener('submit', (e) => { e.preventDefault(); handleSignup(null); });
 els.googleBtn.addEventListener('click', handleGoogleLogin);
 
 // User menu

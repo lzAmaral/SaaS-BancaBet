@@ -33,33 +33,33 @@
       </div>
 
       <!-- Formulário Login -->
-      <form id="loginForm" class="auth-form" autocomplete="off" method="dialog" onsubmit="return false">
+      <form id="loginForm" class="auth-form" autocomplete="off" onsubmit="return false">
         <label class="auth-field">
           <span>E-mail</span>
-          <input id="loginEmail" type="email" placeholder="seu@email.com" required />
+          <input id="loginEmail" type="email" placeholder="seu@email.com" />
         </label>
         <label class="auth-field">
           <span>Senha</span>
-          <input id="loginPassword" type="password" placeholder="••••••••" required minlength="6" />
+          <input id="loginPassword" type="password" placeholder="••••••••" minlength="6" />
         </label>
-        <button class="primary-btn auth-btn" type="submit" id="loginBtn">Entrar</button>
+        <button class="primary-btn auth-btn" type="button" id="loginBtn" onclick="handleLogin(null)">Entrar</button>
       </form>
 
       <!-- Formulário Cadastro -->
-      <form id="signupForm" class="auth-form hidden" autocomplete="off" method="dialog" onsubmit="return false">
+      <form id="signupForm" class="auth-form hidden" autocomplete="off" onsubmit="return false">
         <label class="auth-field">
           <span>E-mail</span>
-          <input id="signupEmail" type="email" placeholder="seu@email.com" required />
+          <input id="signupEmail" type="email" placeholder="seu@email.com" />
         </label>
         <label class="auth-field">
           <span>Senha</span>
-          <input id="signupPassword" type="password" placeholder="Mínimo 6 caracteres" required minlength="6" />
+          <input id="signupPassword" type="password" placeholder="Mínimo 6 caracteres" minlength="6" />
         </label>
         <label class="auth-field">
           <span>Confirmar senha</span>
-          <input id="signupConfirm" type="password" placeholder="Repita a senha" required minlength="6" />
+          <input id="signupConfirm" type="password" placeholder="Repita a senha" minlength="6" />
         </label>
-        <button class="primary-btn auth-btn" type="submit" id="signupBtn">Criar conta</button>
+        <button class="primary-btn auth-btn" type="button" id="signupBtn" onclick="handleSignup(null)">Criar conta</button>
       </form>
 
       <div class="auth-divider"><span>ou</span></div>
