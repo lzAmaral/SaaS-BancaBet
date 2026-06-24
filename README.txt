@@ -26,11 +26,7 @@ Atualizações desta versão:
 - O app salva automaticamente no localStorage do navegador/celular.
 - Os dados ficam salvos no aparelho/navegador usado.
 
-Como usar:
-1. Extraia o ZIP.
-2. Abra a pasta no VS Code.
-3. Abra o index.html no navegador.
-4. Para usar no celular, hospede os arquivos ou use um servidor local.
+
 
 Arquivos principais:
 - index.html
