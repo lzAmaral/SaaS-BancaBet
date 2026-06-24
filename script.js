@@ -299,21 +299,33 @@ function setAuthLoading(btn, loading) {
 }
 
 async function handleLogin(event) {
-  event.preventDefault();
+  if (event) event.preventDefault();
   if (!supabase) return showAuthMessage('Supabase não inicializado. Recarregue a página.', true);
+  const email = els.loginEmail.value.trim();
+  const password = els.loginPassword.value;
+  if (!email || !password) return showAuthMessage('Preencha e-mail e senha.', true);
   setAuthLoading(els.loginBtn, true);
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: els.loginEmail.value.trim(),
-    password: els.loginPassword.value
-  });
-  setAuthLoading(els.loginBtn, false);
-  if (error) { showAuthMessage(translateAuthError(error.message), true); return; }
-  // onAuthStateChange vai cuidar do resto, mas como fallback
-  // ativamos o app manualmente caso o evento demore ou não dispare
-  if (data?.session?.user && !state.user) {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    setAuthLoading(els.loginBtn, false);
+    if (error) {
+      console.error('[Login] Erro Supabase:', error.message);
+      showAuthMessage(translateAuthError(error.message), true);
+      return;
+    }
+    if (!data?.session) {
+      showAuthMessage('Sessão não retornada. Tente novamente.', true);
+      return;
+    }
+    // Entra no app diretamente — não espera pelo onAuthStateChange
     await initUserSession(data.session);
+  } catch (err) {
+    setAuthLoading(els.loginBtn, false);
+    console.error('[Login] Erro inesperado:', err);
+    showAuthMessage('Erro inesperado. Verifique sua conexão e tente novamente.', true);
   }
 }
+
 
 async function handleSignup(event) {
   event.preventDefault();
