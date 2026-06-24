@@ -314,13 +314,25 @@ async function handleSignup(event) {
     showAuthMessage('As senhas não coincidem.', true); return;
   }
   setAuthLoading(els.signupBtn, true);
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: els.signupEmail.value.trim(),
     password: els.signupPassword.value
   });
   setAuthLoading(els.signupBtn, false);
   if (error) { showAuthMessage(translateAuthError(error.message), true); return; }
-  showAuthMessage('Conta criada! Verifique seu e-mail para confirmar.', false);
+  // Supabase retorna user=null quando o email já está cadastrado mas não confirmado
+  if (!data?.user) {
+    showAuthMessage('Este e-mail já está cadastrado. Verifique sua caixa de entrada para confirmar o cadastro ou tente fazer login.', true);
+    return;
+  }
+  // Cadastro realizado com sucesso
+  if (data.session) {
+    // Email confirmation disabled — user is already logged in
+    showAuthMessage('Conta criada com sucesso! Entrando...', false);
+  } else {
+    // Email confirmation required
+    showAuthMessage('Conta criada! Verifique seu e-mail para confirmar o cadastro.', false);
+  }
 }
 
 async function handleGoogleLogin() {
