@@ -172,21 +172,25 @@ async function loadBetsFromSupabase() {
 }
 
 async function loadSettingsFromSupabase() {
-  const { data } = await supabase
-    .from('settings')
-    .select('*')
-    .eq('user_id', state.user.id)
-    .single();
-  if (data) {
-    state.settings = {
-      initialBankroll: Number(data.initial_bankroll) || 0,
-      unitStake: Number(data.unit_stake) || 0,
-      monthlyGoal: Number(data.monthly_goal) || 0,
-      dailyLossLimit: Number(data.daily_loss_limit) || 0,
-      neonTheme: data.neon_theme ?? true,
-      autoSave: true,
-      confirmResult: data.confirm_result ?? true
-    };
+  try {
+    const { data, error } = await supabase
+      .from('settings')
+      .select('*')
+      .eq('user_id', state.user.id)
+      .maybeSingle(); // evita erro PGRST116 quando não há linha
+    if (data && !error) {
+      state.settings = {
+        initialBankroll: Number(data.initial_bankroll) || 0,
+        unitStake: Number(data.unit_stake) || 0,
+        monthlyGoal: Number(data.monthly_goal) || 0,
+        dailyLossLimit: Number(data.daily_loss_limit) || 0,
+        neonTheme: data.neon_theme ?? true,
+        autoSave: true,
+        confirmResult: data.confirm_result ?? true
+      };
+    }
+  } catch (e) {
+    console.warn('Erro ao carregar configurações (não crítico):', e);
   }
 }
 
@@ -298,13 +302,17 @@ async function handleLogin(event) {
   event.preventDefault();
   if (!supabase) return showAuthMessage('Supabase não inicializado. Recarregue a página.', true);
   setAuthLoading(els.loginBtn, true);
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: els.loginEmail.value.trim(),
     password: els.loginPassword.value
   });
   setAuthLoading(els.loginBtn, false);
   if (error) { showAuthMessage(translateAuthError(error.message), true); return; }
-  // onAuthStateChange vai cuidar do resto
+  // onAuthStateChange vai cuidar do resto, mas como fallback
+  // ativamos o app manualmente caso o evento demore ou não dispare
+  if (data?.session?.user && !state.user) {
+    await initUserSession(data.session);
+  }
 }
 
 async function handleSignup(event) {
@@ -371,22 +379,36 @@ function translateAuthError(msg) {
 // ============================================================
 // INICIALIZAÇÃO — ouvir mudanças de sessão
 // ============================================================
+async function initUserSession(session) {
+  if (state.user?.id === session.user.id) return; // já inicializado
+  state.user = session.user;
+  els.userMenuEmail.textContent = session.user.email;
+  showApp();
+  try {
+    await loadSettingsFromSupabase();
+    if (state.isOnline) {
+      await loadBetsFromSupabase();
+    } else {
+      loadLocalFallback();
+      setSyncStatus('offline');
+    }
+    renderAll();
+    showView('betsView');
+  } catch (e) {
+    console.error('Erro ao inicializar sessão:', e);
+    // Mesmo com erro, tenta renderizar com dados locais
+    loadLocalFallback();
+    renderAll();
+    showView('betsView');
+  }
+}
+
 if (supabase) {
   supabase.auth.onAuthStateChange(async (event, session) => {
     if (session?.user) {
-      state.user = session.user;
-      els.userMenuEmail.textContent = session.user.email;
-      showApp();
-      await loadSettingsFromSupabase();
-      if (state.isOnline) {
-        await loadBetsFromSupabase();
-      } else {
-        loadLocalFallback();
-        setSyncStatus('offline');
-      }
-      renderAll();
-      showView('betsView');
+      await initUserSession(session);
     } else {
+      state.user = null;
       showAuthScreen();
     }
   });
